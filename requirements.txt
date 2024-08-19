@@ -1,4 +1,4 @@
 Flask==3.0.3
-google-ai-generativelanguage==0.6.5
+google-generativeai==0.7.0
 python-dotenv==1.0.0
 gunicorn==20.1.0
