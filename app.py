@@ -71,7 +71,7 @@ def generate_flowchart(topic):
             {{"from": 4, "to": 5}}
         ]
     }}
-    """
+    """  # Closing triple-quoted string correctly
 
     response = model.generate_content(prompt)
     print("Raw API response:", response.text)  # For debugging
