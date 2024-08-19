@@ -79,7 +79,6 @@ def generate_flowchart(topic):
     }}
     ```
     
-    """
     
     response = model.generate_content(prompt)
     print("Raw API response:", response.text)  # For debugging
