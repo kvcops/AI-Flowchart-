@@ -20,20 +20,15 @@ def generate_flowchart(topic):
 
     The output should be in JSON format with the following structure:
 
-    ```json
     {{
         "nodes": [
             {{"id": 1, "label": "Start", "level": 0, "shape": "ellipse"}},
-            {{"id": 2, "label": "Step 1", "level": 1, "shape": "box"}},
-            ...
+            {{"id": 2, "label": "Step 1", "level": 1, "shape": "box"}}
         ],
         "edges": [
-            {{"from": 1, "to": 2}},
-            {{"from": 2, "to": 3}},
-            ...
+            {{"from": 1, "to": 2}}
         ]
     }}
-    ```
 
     **Important Guidelines:**
 
@@ -61,7 +56,6 @@ def generate_flowchart(topic):
     
     **Example (Simple Algorithm):**
     
-    ```json
     {{
         "nodes": [
             {{"id": 1, "label": "Start", "level": 0, "shape": "ellipse"}},
@@ -77,9 +71,8 @@ def generate_flowchart(topic):
             {{"from": 4, "to": 5}}
         ]
     }}
-    ```
-    
-    
+    """
+
     response = model.generate_content(prompt)
     print("Raw API response:", response.text)  # For debugging
     
@@ -93,7 +86,7 @@ def generate_flowchart(topic):
             return {"error": "Invalid JSON structure", "raw_response": response.text}
     else:
         return {"error": "No JSON object found in the response", "raw_response": response.text}
-    
+
 @app.route('/get_flowchart_data', methods=['POST'])
 def get_flowchart_data():
     topic = request.json['topic']
