@@ -81,16 +81,37 @@ def clean_and_validate_json(text):
             return None
 
         for node in json_data['nodes']:
-            if not all(key in node for key in ['id', 'label', 'level']):
+            if not all(key in node for key in ['id', 'label','level']):
                 return None
             node['shape'] = node.get('shape', 'box')
             node['level'] = node.get('level', 0)
             node['order'] = node.get('order', 1)
+            try:
+                node['id'] = int(node['id'])
+            except ValueError:
+                 logging.error(f"ValueError Node ID is not an Integer: {node}")
+                 return None
 
         for edge in json_data['edges']:
-            if not all(key in edge for key in ['from', 'to']):
+             if 'from' in edge and 'to' in edge:
+                pass
+             elif "source" in edge and 'target' in edge:
+                edge['from'] = edge.pop('source')
+                edge['to'] = edge.pop('target')
+             else:
+                logging.error(f"Invalid JSON structure, edge is missing from/to or source/target keys: {edge}")
                 return None
-            edge['order'] = edge.get('order', 1)
+             try:
+                  edge['from'] = int(edge['from'])
+                  edge['to'] = int(edge['to'])
+             except ValueError:
+                 logging.error(f"ValueError From or to is not an Integer: {edge}")
+                 return None
+
+             if not all(key in edge for key in ['from', 'to']):
+                  logging.error(f"Invalid JSON structure - missing from or to in edge: {edge}")
+                  return None
+             edge['order'] = edge.get('order', 1)
 
         return json_data
     except json.JSONDecodeError:
@@ -141,8 +162,7 @@ Rules:
 
         return flowchart_data
     except Exception as e:
-        logging.error(f"Error generating flowchart: {str(e)}")
-        return {"error": f"Error generating flowchart: {str(e)}"}
+        return {"error": f"Error generating flowchart: {str(e)}", "raw_response": response.text}
 
 def modify_flowchart(current_data, prompt, chart_type):
     """Modifies the current flowchart based on a user prompt."""
@@ -158,8 +178,8 @@ Output ONLY the JSON, no other text."""
         logging.debug(f"Model Response: {response.text}")
 
         if modified_data is None:
-            logging.error("Invalid JSON structure from modification")
-            return {"error": "Invalid JSON structure from modification", "raw_response": response.text}
+             logging.error("Invalid JSON structure from modification")
+             return {"error": "Invalid JSON structure from modification", "raw_response": response.text}
 
         # Initialize with existing ids
         nodes_mapping = {node['id']:node for node in current_data['nodes']}
@@ -334,7 +354,7 @@ def modify_flowchart_prompt():
     data = request.get_json()
     prompt = data.get('prompt')
     chart_type = data.get('chart_type', 'flowchart')
-    animation = data.get('animation', 'static') # Get the animation value
+    animation = data.get('animation', 'static')  # Get the animation value
 
     if not prompt:
         return jsonify({"status": "error", "message": "Prompt cannot be empty"}), 400
@@ -354,16 +374,16 @@ def modify_flowchart_prompt():
             "id": node["id"],
             "label": node["label"],
             "shape": node.get("shape", "box"),
-             "order": node.get("order", 1),
+            "order": node.get("order", 1),
             "level": node.get("level", 0)
-         } for node in current_flowchart_data.get('nodes', [])]
+        } for node in current_flowchart_data.get('nodes', [])]
 
         edges = [{
             "from": edge["from"],
             "to": edge["to"],
             "id": f"{edge['from']}-{edge['to']}-{time.time()}",
             "order": edge.get("order", 1)
-         } for edge in current_flowchart_data.get('edges', [])]
+        } for edge in current_flowchart_data.get('edges', [])]
 
         return jsonify({
             "status": "success",
@@ -373,7 +393,7 @@ def modify_flowchart_prompt():
             "chart_type": chart_type
         })
     except Exception as e:
-       return jsonify({"error": f"Error modifying flowchart: {str(e)}"})
+       return jsonify({"error": f"Error modifying flowchart: {str(e)}", "raw_response": response.text})
     finally:
       is_chart_modifying = False # clear flag
 
