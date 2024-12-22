@@ -1,5 +1,3 @@
-
-
 from flask import Flask, render_template, request, jsonify
 import logging
 import google.generativeai as genai
@@ -11,6 +9,7 @@ from werkzeug.utils import secure_filename
 from docx import Document
 import PyPDF2
 import tempfile
+import time
 
 # Replace with your actual API key
 api_key = os.environ.get("API_KEY")  # Replace this with your API key
@@ -82,7 +81,7 @@ def clean_and_validate_json(text):
             return None
 
         for node in json_data['nodes']:
-            if not all(key in node for key in ['id', 'label']):
+            if not all(key in node for key in ['id', 'label','level']):
                 return None
             node['shape'] = node.get('shape', 'box')
             node['level'] = node.get('level', 0)
@@ -106,6 +105,7 @@ def generate_flowchart(topic, chart_type, animation, detail_level, document_text
 
     prompt = topic_prompt + f"""
 Please create a {'mind map' if chart_type == 'mind_map' else 'flowchart'} that is {'animated' if animation == 'animated' else 'static'} and {'simple' if detail_level == 'simple' else 'normal' if detail_level == 'normal' else 'detailed'}.
+The root node for the hierarchy must be the main topic provided, and must have level 0, sub nodes must have level = 1 and sub-sub nodes must have level = 2, and all edges must follow the hierarchy of the levels specified.
 
 Output a JSON object with this exact structure:
 {{
@@ -134,6 +134,11 @@ Rules:
         if flowchart_data is None:
             return {"error": "Invalid JSON structure", "raw_response": response.text}
 
+        # Assign sequential IDs if they are missing
+        if not all('id' in node for node in flowchart_data['nodes']):
+            for i, node in enumerate(flowchart_data['nodes']):
+                node['id'] = i + 1
+
         return flowchart_data
     except Exception as e:
         return {"error": f"Error generating flowchart: {str(e)}"}
@@ -142,8 +147,7 @@ def modify_flowchart(current_data, prompt, chart_type):
     """Modifies the current flowchart based on a user prompt."""
     current_data_str = json.dumps(current_data)
     prompt_text = f"""Given the current {'mind map' if chart_type == 'mind_map' else 'flowchart'} data:\n\n{current_data_str}\n\nModify it according to the following prompt: \"{prompt}\".
-
-The output should be a JSON object with the same structure as before, representing the updated {'mind map' if chart_type == 'mind_map' else 'flowchart'}. Ensure that the node and edge IDs remain unique and consistent where applicable.
+The output should be a JSON object with the same structure as before, representing the updated {'mind map' if chart_type == 'mind_map' else 'flowchart'}. Ensure that the node and edge IDs remain unique and consistent where applicable. The node levels must be set such that root is always level 0, and children must be 1 or 2 or more (hierarchical). Ensure that the edges follow this node level hierarchy.
 
 Output ONLY the JSON, no other text."""
 
@@ -154,7 +158,39 @@ Output ONLY the JSON, no other text."""
         if modified_data is None:
             return {"error": "Invalid JSON structure from modification", "raw_response": response.text}
 
-        return modified_data
+        # Initialize with existing ids
+        nodes_mapping = {node['id']:node for node in current_data['nodes']}
+        
+        # Update nodes, adding new ones, keeping the existing ones
+        for node in modified_data['nodes']:
+            if node['id'] in nodes_mapping:
+               nodes_mapping[node['id']]['label'] = node['label']
+               nodes_mapping[node['id']]['shape'] = node.get('shape', 'box')
+               nodes_mapping[node['id']]['level'] = node.get('level', 0)
+               nodes_mapping[node['id']]['order'] = node.get('order', 1)
+            else:
+              # Generate a new unique ID if new node, keep the existing
+               new_id = max([node['id'] for node in current_data['nodes']] or [0]) + 1
+               node['id'] = new_id
+               current_data['nodes'].append(node)
+               nodes_mapping[new_id] = node
+
+        # Remove nodes not in modified data
+        modified_node_ids = set([node['id'] for node in modified_data['nodes']])
+        current_data['nodes'] = [node for node in current_data['nodes'] if node['id'] in modified_node_ids]
+
+        #Update edges
+        edges_mapping = {}
+        for edge in modified_data['edges']:
+            new_edge_id = f"{edge['from']}-{edge['to']}-{time.time()}"
+            edge['id'] = new_edge_id # Assign unique edge ID
+            if not any((edge['from'] == old_edge['from'] and edge['to'] == old_edge['to']) for old_edge in current_data['edges']):
+                 current_data['edges'].append(edge)
+            edges_mapping[new_edge_id] = edge
+        # Remove edges not in modified data
+        current_data['edges'] = [edge for edge in current_data['edges'] if  f"{edge['from']}-{edge['to']}-{time.time()}" in edges_mapping]
+        
+        return current_data
     except Exception as e:
         return {"error": f"Error modifying flowchart: {str(e)}"}
 
@@ -219,7 +255,7 @@ def get_flowchart_data():
         edges = [{
             "from": edge["from"],
             "to": edge["to"],
-            "id": f"{edge['from']}-{edge['to']}",
+            "id": f"{edge['from']}-{edge['to']}-{time.time()}",
             "order": edge.get("order", 1)
         } for edge in flowchart_data.get('edges', [])]
 
@@ -294,6 +330,7 @@ def modify_flowchart_prompt():
     data = request.get_json()
     prompt = data.get('prompt')
     chart_type = data.get('chart_type', 'flowchart')
+    animation = data.get('animation', 'static') # Get the animation value
 
     if not prompt:
         return jsonify({"status": "error", "message": "Prompt cannot be empty"}), 400
@@ -308,28 +345,28 @@ def modify_flowchart_prompt():
         if 'error' in modified_data:
             return jsonify(modified_data), 500
 
-        current_flowchart_data = modified_data # Update the current data
-        
-        # Prepare the data for vis-network
+         # Prepare the data for vis-network
         nodes = [{
             "id": node["id"],
             "label": node["label"],
             "shape": node.get("shape", "box"),
-            "order": node.get("order", 1),
+             "order": node.get("order", 1),
             "level": node.get("level", 0)
-        } for node in modified_data.get('nodes', [])]
+         } for node in current_flowchart_data.get('nodes', [])]
 
         edges = [{
             "from": edge["from"],
             "to": edge["to"],
-            "id": f"{edge['from']}-{edge['to']}",
+            "id": f"{edge['from']}-{edge['to']}-{time.time()}",
             "order": edge.get("order", 1)
-        } for edge in modified_data.get('edges', [])]
+         } for edge in current_flowchart_data.get('edges', [])]
 
         return jsonify({
             "status": "success",
             "nodes": nodes,
-            "edges": edges
+            "edges": edges,
+            "animation": animation,
+             "chart_type": chart_type # Send back the chart type as well
         })
     except Exception as e:
        return jsonify({"error": f"Error modifying flowchart: {str(e)}"})
