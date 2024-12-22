@@ -81,7 +81,7 @@ def clean_and_validate_json(text):
             return None
 
         for node in json_data['nodes']:
-            if not all(key in node for key in ['id', 'label','level']):
+            if not all(key in node for key in ['id', 'label', 'level']):
                 return None
             node['shape'] = node.get('shape', 'box')
             node['level'] = node.get('level', 0)
@@ -141,6 +141,7 @@ Rules:
 
         return flowchart_data
     except Exception as e:
+        logging.error(f"Error generating flowchart: {str(e)}")
         return {"error": f"Error generating flowchart: {str(e)}"}
 
 def modify_flowchart(current_data, prompt, chart_type):
@@ -154,8 +155,10 @@ Output ONLY the JSON, no other text."""
     try:
         response = model.generate_content(prompt_text)
         modified_data = clean_and_validate_json(response.text)
+        logging.debug(f"Model Response: {response.text}")
 
         if modified_data is None:
+            logging.error("Invalid JSON structure from modification")
             return {"error": "Invalid JSON structure from modification", "raw_response": response.text}
 
         # Initialize with existing ids
@@ -192,7 +195,8 @@ Output ONLY the JSON, no other text."""
         
         return current_data
     except Exception as e:
-        return {"error": f"Error modifying flowchart: {str(e)}"}
+        logging.error(f"Error modifying flowchart: {str(e)}")
+        return {"error": f"Error modifying flowchart: {str(e)}", "raw_response": response.text}
 
 @app.route('/')
 def index():
@@ -366,7 +370,7 @@ def modify_flowchart_prompt():
             "nodes": nodes,
             "edges": edges,
             "animation": animation,
-             "chart_type": chart_type # Send back the chart type as well
+            "chart_type": chart_type
         })
     except Exception as e:
        return jsonify({"error": f"Error modifying flowchart: {str(e)}"})
