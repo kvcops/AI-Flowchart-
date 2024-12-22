@@ -160,7 +160,7 @@
             color: var(--primary-light);
         }
 
-       .input-field input,
+        .input-field input,
         .input-field select {
             padding: 1rem 1.2rem;
             border-radius: 8px;
@@ -170,8 +170,6 @@
             font-size: 1rem;
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-            max-width: 100%; /* Ensures input fields don't overflow */
-            box-sizing: border-box; /* Includes padding and border in the element's total width and height */
         }
 
         .input-field input:focus,
@@ -207,7 +205,7 @@
             background-color: var(--dropdown-hover-bg);
         }
 
-         .generate-button {
+        .generate-button {
             margin-top: 2.5rem;
             padding: 1.2rem 2.8rem;
             font-size: 1.1rem;
@@ -221,10 +219,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden;
-            width: fit-content;
-            align-self: center; /* Center the button */
         }
-
 
         .generate-button:hover {
             transform: scale(1.03);
@@ -318,11 +313,9 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 5px 15px var(--shadow-color);
             z-index: 2;
-            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-            justify-content: center; /* Center the buttons horizontally */
         }
 
-         .control-button {
+        .control-button {
             padding: 0.7rem 1.4rem;
             border: none;
             border-radius: 25px;
@@ -331,7 +324,6 @@
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease-in-out;
-            margin: 0.25rem; /* Add some spacing around the buttons */
         }
 
         .control-button:hover {
@@ -343,7 +335,7 @@
             transform: scale(0.95);
         }
 
-         .zoom-button {
+        .zoom-button {
             position: absolute;
             top: 1rem;
             width: 40px;
@@ -381,8 +373,9 @@
         .utility-button {
             position: absolute;
             top: 1rem;
-            padding: 0.7rem;  /* Modified padding to be equal on all sides */
+            padding: 0.7rem 1.4rem;
             border: none;
+            border-radius: 8px;
             background: rgba(0, 0, 0, 0.4);
             color: var(--text);
             font-weight: 500;
@@ -391,7 +384,6 @@
             backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 0.5rem;
         }
 
@@ -410,21 +402,11 @@
 
         #fullscreen-btn {
             right: 1rem;
-            border-radius: 8px;  /* Keep original border-radius */
-            padding: 0.7rem 1.4rem;  /* Keep original padding */
         }
 
         #save-btn {
-            right: 9rem;  /* Position it between zoom buttons and fullscreen */
-            width: 40px;  /* Make it circular with fixed width */
-            height: 40px;  /* Make it circular with fixed height */
-            border-radius: 50%;  /* Make it perfectly circular */
-            padding: 0;  /* Remove padding */
-            background: rgba(0, 0, 0, 0.4);  /* Match other button backgrounds */
-        }
-        
-        #save-btn i {
-            font-size: 1.2rem;  /* Match other button icon sizes */
+            right: 9rem;
+            background: linear-gradient(45deg, var(--accent), var(--primary));
         }
 
         .error-message {
@@ -462,7 +444,7 @@
         }
 
         @media (max-width: 768px) {
-           .container {
+            .container {
                 padding: 2rem;
                 gap: 2rem;
             }
@@ -472,7 +454,7 @@
             }
 
             .form-container {
-                padding: 1.5rem; /* Reduced padding */
+                padding: 2rem;
             }
 
             .form-grid {
@@ -480,52 +462,28 @@
                 gap: 1.5rem;
             }
 
-             .input-field input,
-            .input-field select {
-                padding: 0.8rem 0.6rem; /* Slightly reduced padding */
-                font-size: 0.9rem; /* Slightly reduced font size */
-            }
-            .input-field label {
-                font-size: 0.9rem;
+            .generate-button {
+                margin-top: 2rem;
             }
 
-             .generate-button {
-                 margin-top: 2rem;
-                 padding: 1rem 2rem;
-                 font-size: 1rem;
-            }
-
-           .chart-container {
+            .chart-container {
                 height: 500px;
             }
 
             .control-panel {
-                 flex-wrap: wrap; /* Ensure buttons wrap */
-                justify-content: center; /* Center buttons */
+                flex-wrap: wrap;
+                justify-content: center;
                 padding: 0.6rem 1rem;
-                gap: 0.5rem;
-
             }
 
-             .control-button {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
-                margin: 0.15rem;
-             }
-
-
-             #save-btn {
-                right: auto;  /* Reset right position */
-                left: 9rem;  /* Position it after zoom buttons */
-                width: 20px;
-                height: 40px;
+            .control-button {
+                padding: 0.6rem 1.2rem;
             }
 
-            
+            #save-btn {
+                display: none;
+            }
         }
-
-        
-
 
         /* Modal Styles */
         .modal {
@@ -604,13 +562,13 @@
             opacity: 0.8;
         }
 
-         .modify-container {
+        .modify-container {
             background: var(--surface);
             border-radius: 12px;
             border: 1px solid var(--input-border);
             backdrop-filter: blur(15px);
             box-shadow: 0 8px 20px var(--shadow-color);
-             padding: 1rem; /* Reduced padding */
+            padding: 2rem;
             margin-top: 2rem;
         }
 
@@ -623,20 +581,19 @@
 
         .modify-container textarea {
             width: 100%;
-            padding: 0rem;
-            border-radius: 10px;
+            padding: 1rem;
+            border-radius: 8px;
             border: 1px solid var(--input-border);
             background: rgba(255, 255, 255, 0.03);
             color: var(--text);
             font-size: 1rem;
             resize: vertical;
-            min-height: 150px;
+            min-height: 100px;
         }
 
-         .modify-container button {
+        .modify-container button {
             margin-top: 1rem;
         }
-
     </style>
 </head>
 <body>
@@ -697,7 +654,7 @@
         <button class="zoom-button" id="zoom-in-btn"><i class="fas fa-plus"></i></button>
         <button class="zoom-button" id="zoom-out-btn"><i class="fas fa-minus"></i></button>
         <button class="utility-button" id="fullscreen-btn"><i class="fas fa-expand-alt"></i> Fullscreen</button>
-        <button class="utility-button" id="save-btn"><i class="fas fa-download"></i></button>
+        <button class="utility-button" id="save-btn"><i class="fas fa-download"></i> Save Image</button>
         <div class="control-panel" id="animation-controls">
             <button class="control-button" id="start-animation-btn">Start</button>
             <button class="control-button" id="play-btn"><i class="fas fa-play"></i> Play</button>
