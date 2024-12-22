@@ -160,7 +160,7 @@ Output ONLY the JSON, no other text."""
 
 @app.route('/')
 def index():
-    return render_template('flowchart.html')
+    return render_template('index.html')
 
 @app.route('/get_flowchart_data', methods=['POST'])
 def get_flowchart_data():
