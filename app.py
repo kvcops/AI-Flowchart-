@@ -1,3 +1,5 @@
+
+
 from flask import Flask, render_template, request, jsonify
 import logging
 import google.generativeai as genai
@@ -12,6 +14,7 @@ import tempfile
 
 # Replace with your actual API key
 api_key = os.environ.get("API_KEY")  # Replace this with your API key
+  # Replace this with your API key
 
 app = Flask(__name__)
 
@@ -157,7 +160,7 @@ Output ONLY the JSON, no other text."""
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('flowchart.html')
 
 @app.route('/get_flowchart_data', methods=['POST'])
 def get_flowchart_data():
